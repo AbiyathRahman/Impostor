@@ -1,0 +1,154 @@
+{
+  "questionPairs": [
+    {
+      "id": 1,
+      "category": "food",
+      "normal": "What's your go-to comfort food?",
+      "imposter": "What's a food you secretly hate that everyone else loves?"
+    },
+    {
+      "id": 2,
+      "category": "food",
+      "normal": "What's the best meal you've ever had?",
+      "imposter": "What's the worst meal you've ever had?"
+    },
+    {
+      "id": 3,
+      "category": "food",
+      "normal": "What's your favorite late night snack?",
+      "imposter": "What's a snack you think is overrated?"
+    },
+    {
+      "id": 4,
+      "category": "travel",
+      "normal": "What's a place you'd love to visit?",
+      "imposter": "What's a popular travel destination you have zero interest in?"
+    },
+    {
+      "id": 5,
+      "category": "travel",
+      "normal": "What's the best trip you've ever taken?",
+      "imposter": "What's a trip you regret taking?"
+    },
+    {
+      "id": 6,
+      "category": "habits",
+      "normal": "What's a weird habit you have?",
+      "imposter": "What's a weird habit someone close to you has?"
+    },
+    {
+      "id": 7,
+      "category": "habits",
+      "normal": "What's something you do every morning without fail?",
+      "imposter": "What's something you keep meaning to do every morning but never do?"
+    },
+    {
+      "id": 8,
+      "category": "relationships",
+      "normal": "What's a quality you look for in a friend?",
+      "imposter": "What's a quality that instantly turns you off from a friendship?"
+    },
+    {
+      "id": 9,
+      "category": "relationships",
+      "normal": "Who in this group would you trust with a secret?",
+      "imposter": "Who in this group is the worst at keeping a secret?"
+    },
+    {
+      "id": 10,
+      "category": "entertainment",
+      "normal": "What's a movie you could watch over and over?",
+      "imposter": "What's a movie everyone loves that you just don't get?"
+    },
+    {
+      "id": 11,
+      "category": "entertainment",
+      "normal": "What's a song that instantly puts you in a good mood?",
+      "imposter": "What's a popular song you secretly can't stand?"
+    },
+    {
+      "id": 12,
+      "category": "hypothetical",
+      "normal": "If you won the lottery tomorrow, what's the first thing you'd buy?",
+      "imposter": "If you had to give away everything but one item, what would you keep?"
+    },
+    {
+      "id": 13,
+      "category": "hypothetical",
+      "normal": "What superpower would you want?",
+      "imposter": "What superpower would be the most annoying to have?"
+    },
+    {
+      "id": 14,
+      "category": "hypothetical",
+      "normal": "If you could instantly master one skill, what would it be?",
+      "imposter": "What's a skill you've given up trying to learn?"
+    },
+    {
+      "id": 15,
+      "category": "personal",
+      "normal": "What's something you're genuinely proud of?",
+      "imposter": "What's something you pretend to be proud of but actually aren't?"
+    },
+    {
+      "id": 16,
+      "category": "personal",
+      "normal": "What's a goal you're working toward right now?",
+      "imposter": "What's a goal you quietly gave up on?"
+    },
+    {
+      "id": 17,
+      "category": "personal",
+      "normal": "What's the most spontaneous thing you've ever done?",
+      "imposter": "What's something spontaneous you wish you'd done but didn't?"
+    },
+    {
+      "id": 18,
+      "category": "group",
+      "normal": "Who in this group would survive longest in a zombie apocalypse?",
+      "imposter": "Who in this group would be the first to go in a zombie apocalypse?"
+    },
+    {
+      "id": 19,
+      "category": "group",
+      "normal": "What's your favorite memory with this group?",
+      "imposter": "What's a memory with this group you'd rather forget?"
+    },
+    {
+      "id": 20,
+      "category": "random",
+      "normal": "What's a small thing that instantly makes your day better?",
+      "imposter": "What's a small thing that instantly ruins your mood?"
+    },
+    {
+      "id": 21,
+      "category": "random",
+      "normal": "What's something you collect or used to collect?",
+      "imposter": "What's something you wish you had thrown away years ago?"
+    },
+    {
+      "id": 22,
+      "category": "random",
+      "normal": "What's a app on your phone you couldn't live without?",
+      "imposter": "What's an app you wish you could delete forever?"
+    },
+    {
+      "id": 23,
+      "category": "work_school",
+      "normal": "What's the best part of your day-to-day routine?",
+      "imposter": "What's the part of your day-to-day routine you dread the most?"
+    },
+    {
+      "id": 24,
+      "category": "work_school",
+      "normal": "What's a skill from school or work that's actually been useful in life?",
+      "imposter": "What's a skill you learned that turned out to be completely useless?"
+    },
+    {
+      "id": 25,
+      "category": "childhood",
+      "normal": "What's your favorite childhood memory?",
+      "imposter": "What's a childhood trend you're embarrassed you were into?"
+    }
+  ]
+}
