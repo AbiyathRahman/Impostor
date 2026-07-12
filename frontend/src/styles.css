@@ -196,8 +196,8 @@ textarea:focus {
 .button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 22px;
 }
 
 .btn {
@@ -271,11 +271,15 @@ textarea:focus {
 }
 
 .reveal-card ul {
-  margin: 0;
+  margin: 0 0 18px;
   padding: 0;
   list-style: none;
   display: grid;
   gap: 10px;
+}
+
+.reveal-card .btn {
+  margin-top: 10px;
 }
 
 .reveal-card li {
