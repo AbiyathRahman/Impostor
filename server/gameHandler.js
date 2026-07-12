@@ -1,5 +1,18 @@
-//const questions = require("../questions.json");
-//console.log(questions.questionPairs.length);
+const {
+    roomExists,
+    getPlayers,
+    hasPlayer,
+    isHost,
+    getPlayerCount,
+    setGameData,
+    submitAnswer,
+    getAnswers,
+    resetAnswers,
+    checkAllPlayersAnswered,
+    revealImpostor
+} = require('./gameState');
+
+
 function assignImpostor(players) {
     const impostorIndex = Math.floor(Math.random() * players.length);
     const impostorId = players[impostorIndex];
@@ -21,32 +34,109 @@ function assignQuestions() {
 
 module.exports = function gameHandler(io, socket) {
     socket.on('start-game', (roomCode) => {
-        const roomExists = io.sockets.adapter.rooms.has(roomCode);
+        const exists = roomExists(roomCode);
 
-        if (!roomExists) {
+        if (!exists) {
             socket.emit('message', 'Room not found');
             return;
         }
 
-        let numPlayers = io.sockets.adapter.rooms.get(roomCode).size;
-        assignImpostor(Array.from(io.sockets.adapter.rooms.get(roomCode)))
-        assignQuestions()
+        const players = getPlayers(roomCode);
+        if (!players.includes(socket.id)) {
+            socket.emit('message', 'You are not in this room');
+            return;
+        }
 
-        if (numPlayers > 3) {
+        const numPlayers = getPlayerCount(roomCode);
+
+        if (numPlayers < 3) {
             socket.emit('message', 'Not enough players to start the game');
 
             return;
         }
         io.to(roomCode).emit('message', 'Game started in room ' + roomCode);
-        const impostorId = assignImpostor(Array.from(io.sockets.adapter.rooms.get(roomCode)));
+        const impostorId = assignImpostor(players);
         const questionPair = assignQuestions();
+        setGameData(roomCode, {
+            started: true,
+            impostorId,
+            questionPair,
+        });
+        resetAnswers(roomCode);
+
         io.to(impostorId).emit('message', 'You are the impostor! Your question is: ' + questionPair.imposter);
-        Array.from(io.sockets.adapter.rooms.get(roomCode)).forEach(playerId => {
+        players.forEach(playerId => {
             if (playerId !== impostorId) {
                 io.to(playerId).emit('message', 'You are a normal player! Your question is: ' + questionPair.normal);
             }
         });
 
+    })
+
+    socket.on('player-answer', (roomCode, playerIdOrAnswer, answerMaybe) => {
+        const exists = roomExists(roomCode);
+
+        if (!exists) {
+            socket.emit('message', 'Room not found');
+            return;
+        }
+
+        if (!hasPlayer(roomCode, socket.id)) {
+            socket.emit('message', 'You are not in this room');
+            return;
+        }
+
+        const answer = typeof answerMaybe === 'undefined' ? playerIdOrAnswer : answerMaybe;
+        if (typeof answer === 'undefined' || answer === null || answer === '') {
+            socket.emit('message', 'Answer cannot be empty');
+            return;
+        }
+
+        submitAnswer(roomCode, socket.id, answer);
+
+        if (checkAllPlayersAnswered(roomCode)) {
+            const answers = getAnswers(roomCode);
+            io.to(roomCode).emit('answers-revealed', answers);
+            io.to(roomCode).emit('message', 'All answers are in. Host can now reveal the impostor.');
+        }
+    })
+
+    socket.on('get-answers', (roomCode) => {
+        const exists = roomExists(roomCode);
+
+        if (!exists) {
+            socket.emit('message', 'Room not found');
+            return;
+        }
+        if (!checkAllPlayersAnswered(roomCode)) {
+            socket.emit('message', 'Not all players have answered yet');
+            return;
+        }
+        const answers = getAnswers(roomCode);
+        io.to(roomCode).emit('answers-revealed', answers);
+    })
+    socket.on('reveal-impostor', (roomCode) => {
+        const exists = roomExists(roomCode);
+
+        if (!exists) {
+            socket.emit('message', 'Room not found');
+            return;
+        }
+
+        if (!isHost(roomCode, socket.id)) {
+            socket.emit('message', 'Only the host can reveal the impostor');
+            return;
+        }
+
+        if (!checkAllPlayersAnswered(roomCode)) {
+            socket.emit('message', 'Cannot reveal impostor until all players answer');
+            return;
+        }
+
+        const impostorId = revealImpostor(roomCode);
+        if (impostorId) {
+            io.to(roomCode).emit('impostor-revealed', impostorId);
+        }
     })
 
     socket.on('disconnect', () => {
