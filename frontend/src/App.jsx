@@ -3,18 +3,6 @@ import { io } from 'socket.io-client';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
 
-function shortId(value) {
-    if (!value) {
-        return 'Unknown';
-    }
-
-    if (value.length <= 10) {
-        return value;
-    }
-
-    return `${value.slice(0, 6)}...${value.slice(-4)}`;
-}
-
 function parseQuestionMessage(message) {
     const prefix = 'Your question is:';
     const idx = message.indexOf(prefix);
@@ -35,27 +23,37 @@ export default function App() {
     const [roomCode, setRoomCode] = useState('');
     const [isHost, setIsHost] = useState(false);
     const [playerCount, setPlayerCount] = useState(1);
+    const [gameStarted, setGameStarted] = useState(false);
 
     const [role, setRole] = useState('');
     const [question, setQuestion] = useState('');
     const [answerText, setAnswerText] = useState('');
     const [answerSubmitted, setAnswerSubmitted] = useState(false);
 
-    const [answers, setAnswers] = useState(null);
+    const [answers, setAnswers] = useState([]);
+    const [playerNameById, setPlayerNameById] = useState({});
     const [impostorId, setImpostorId] = useState('');
     const [messages, setMessages] = useState([]);
 
-    const canStart = inRoom && isHost && playerCount >= 3 && !question;
+    const canStart = inRoom && isHost && playerCount >= 3 && !gameStarted;
     const canSubmitAnswer = inRoom && question && !answerSubmitted;
-    const canRevealImpostor = inRoom && isHost && Boolean(answers) && !impostorId;
+    const canRevealImpostor = inRoom && isHost && answers.length > 0 && !impostorId;
 
     const answerEntries = useMemo(() => {
-        if (!answers) {
+        if (!answers.length) {
             return [];
         }
 
-        return Object.entries(answers);
+        return answers;
     }, [answers]);
+
+    const revealedImpostorName = useMemo(() => {
+        if (!impostorId) {
+            return '';
+        }
+
+        return playerNameById[impostorId] || 'Unknown player';
+    }, [impostorId, playerNameById]);
 
     useEffect(() => {
         const socket = io(SERVER_URL);
@@ -79,7 +77,12 @@ export default function App() {
                 setPlayerCount(Number(playersMatch[1]));
             }
 
+            if (msg.includes('Game started in room')) {
+                setGameStarted(true);
+            }
+
             if (msg.includes('You are the impostor!')) {
+                setGameStarted(true);
                 setRole('Impostor');
                 const parsedQuestion = parseQuestionMessage(msg);
                 if (parsedQuestion) {
@@ -88,6 +91,7 @@ export default function App() {
             }
 
             if (msg.includes('You are a normal player!')) {
+                setGameStarted(true);
                 setRole('Player');
                 const parsedQuestion = parseQuestionMessage(msg);
                 if (parsedQuestion) {
@@ -97,7 +101,21 @@ export default function App() {
         });
 
         socket.on('answers-revealed', (roomAnswers) => {
-            setAnswers(roomAnswers);
+            const normalizedAnswers = Array.isArray(roomAnswers)
+                ? roomAnswers
+                : Object.entries(roomAnswers || {}).map(([playerId, answer]) => ({
+                    playerId,
+                    playerName: playerNameById[playerId] || 'Anonymous',
+                    answer,
+                }));
+
+            const nextNames = {};
+            normalizedAnswers.forEach((entry) => {
+                nextNames[entry.playerId] = entry.playerName;
+            });
+
+            setPlayerNameById((prev) => ({ ...prev, ...nextNames }));
+            setAnswers(normalizedAnswers);
             setMessages((prev) => [...prev, 'Answers are now revealed']);
         });
 
@@ -139,11 +157,13 @@ export default function App() {
             setRoomCode(response.roomCode);
             setIsHost(Boolean(response.isHost));
             setPlayerCount(1);
+            setGameStarted(false);
             setRole('');
             setQuestion('');
             setAnswerText('');
             setAnswerSubmitted(false);
-            setAnswers(null);
+            setAnswers([]);
+            setPlayerNameById({});
             setImpostorId('');
             setMessages((prev) => [...prev, `Room ${response.roomCode} created`]);
         });
@@ -172,11 +192,13 @@ export default function App() {
             setInRoom(true);
             setRoomCode(response.roomCode);
             setIsHost(Boolean(response.isHost));
+            setGameStarted(false);
             setRole('');
             setQuestion('');
             setAnswerText('');
             setAnswerSubmitted(false);
-            setAnswers(null);
+            setAnswers([]);
+            setPlayerNameById({});
             setImpostorId('');
             setMessages((prev) => [...prev, `Joined room ${response.roomCode}`]);
         });
@@ -231,11 +253,13 @@ export default function App() {
             setRoomCode('');
             setIsHost(false);
             setPlayerCount(1);
+            setGameStarted(false);
             setRole('');
             setQuestion('');
             setAnswerText('');
             setAnswerSubmitted(false);
-            setAnswers(null);
+            setAnswers([]);
+            setPlayerNameById({});
             setImpostorId('');
             setMessages((prev) => [...prev, 'You left the room']);
         });
@@ -303,22 +327,33 @@ export default function App() {
                                 </div>
                             </article>
 
-                            <article className="card flow-card">
-                                <h2>Game Flow</h2>
-                                <ol>
-                                    <li>Gather at least 3 players.</li>
-                                    <li>Host starts the game.</li>
-                                    <li>Everyone submits one answer.</li>
-                                    <li>Answers reveal to all, then host reveals impostor.</li>
-                                </ol>
+                            {!gameStarted ? (
+                                <article className="card flow-card">
+                                    <h2>Game Flow</h2>
+                                    <ol>
+                                        <li>Gather at least 3 players.</li>
+                                        <li>Host starts the game.</li>
+                                        <li>Everyone submits one answer.</li>
+                                        <li>Answers reveal to all, then host reveals impostor.</li>
+                                    </ol>
 
-                                <div className="button-row">
-                                    <button className="btn btn-primary" onClick={doStartGame} disabled={!canStart}>
-                                        Start Game
-                                    </button>
-                                    <button className="btn" onClick={doLeaveRoom}>Leave Room</button>
-                                </div>
-                            </article>
+                                    <div className="button-row">
+                                        <button className="btn btn-primary" onClick={doStartGame} disabled={!canStart}>
+                                            Start Game
+                                        </button>
+                                        <button className="btn" onClick={doLeaveRoom}>Leave Room</button>
+                                    </div>
+                                </article>
+                            ) : (
+                                <article className="card stage-card">
+                                    <div className="stage-head">
+                                        <p className="meta-label">Main Stage</p>
+                                        <button className="btn" onClick={doLeaveRoom}>Leave Room</button>
+                                    </div>
+                                    <h2>Game in Progress</h2>
+                                    <p className="stage-note">Use the card below to view your role, question, and submit your answer.</p>
+                                </article>
+                            )}
 
                             {question ? (
                                 <article className="card question-card">
@@ -346,14 +381,14 @@ export default function App() {
                                 </article>
                             )}
 
-                            {answers && (
+                            {answers.length > 0 && (
                                 <article className="card reveal-card">
                                     <h3>Answers Revealed</h3>
                                     <ul>
-                                        {answerEntries.map(([playerId, answer]) => (
-                                            <li key={playerId}>
-                                                <span>{shortId(playerId)}</span>
-                                                <p>{answer}</p>
+                                        {answerEntries.map((entry) => (
+                                            <li key={entry.playerId}>
+                                                <span>{entry.playerName}</span>
+                                                <p>{entry.answer}</p>
                                             </li>
                                         ))}
                                     </ul>
@@ -368,7 +403,7 @@ export default function App() {
                             {impostorId && (
                                 <article className="card impostor-card">
                                     <h3>Impostor Revealed</h3>
-                                    <p>{shortId(impostorId)}</p>
+                                    <p>{revealedImpostorName}</p>
                                 </article>
                             )}
                         </>

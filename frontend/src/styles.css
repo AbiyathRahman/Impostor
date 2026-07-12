@@ -237,6 +237,25 @@ textarea:focus {
   color: var(--text-muted);
 }
 
+.stage-card h2 {
+  margin: 10px 0 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+}
+
+.stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage-note {
+  margin: 0;
+  font-size: 1.08rem;
+  color: var(--text-muted);
+}
+
 .question-text {
   margin-top: 10px;
   font-size: 1.15rem;

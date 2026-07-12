@@ -7,6 +7,7 @@ const {
     setGameData,
     submitAnswer,
     getAnswers,
+    getPlayerNames,
     resetAnswers,
     checkAllPlayersAnswered,
     revealImpostor
@@ -96,7 +97,13 @@ module.exports = function gameHandler(io, socket) {
 
         if (checkAllPlayersAnswered(roomCode)) {
             const answers = getAnswers(roomCode);
-            io.to(roomCode).emit('answers-revealed', answers);
+            const playerNames = getPlayerNames(roomCode);
+            const revealedAnswers = Object.entries(answers).map(([playerId, playerAnswer]) => ({
+                playerId,
+                playerName: playerNames[playerId] || 'Anonymous',
+                answer: playerAnswer,
+            }));
+            io.to(roomCode).emit('answers-revealed', revealedAnswers);
             io.to(roomCode).emit('message', 'All answers are in. Host can now reveal the impostor.');
         }
     })
@@ -113,7 +120,13 @@ module.exports = function gameHandler(io, socket) {
             return;
         }
         const answers = getAnswers(roomCode);
-        io.to(roomCode).emit('answers-revealed', answers);
+        const playerNames = getPlayerNames(roomCode);
+        const revealedAnswers = Object.entries(answers).map(([playerId, playerAnswer]) => ({
+            playerId,
+            playerName: playerNames[playerId] || 'Anonymous',
+            answer: playerAnswer,
+        }));
+        io.to(roomCode).emit('answers-revealed', revealedAnswers);
     })
     socket.on('reveal-impostor', (roomCode) => {
         const exists = roomExists(roomCode);
