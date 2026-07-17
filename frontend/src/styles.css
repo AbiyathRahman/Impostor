@@ -46,6 +46,13 @@ body {
   margin: 0 auto;
 }
 
+.layout-lobby {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: calc(100vh - 48px);
+  align-items: center;
+  justify-items: center;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -58,6 +65,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.layout-lobby .panel-main {
+  width: min(100%, 640px);
+  min-height: auto;
+  padding: 24px;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.lobby-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-screen .card-grid {
+  width: min(100%, 560px);
+  margin-top: 0;
+  gap: 14px;
 }
 
 .panel-log {
@@ -89,7 +116,7 @@ body {
 }
 
 .hero h1 {
-  margin: 10px 0 10px;
+  margin: 0 0 6px;
   font-family: 'Outfit', sans-serif;
   font-size: clamp(2rem, 3.6vw, 3rem);
   letter-spacing: 0.04em;
@@ -112,7 +139,7 @@ body {
   background: var(--panel-soft);
   border: 1px solid var(--line);
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   animation: rise 420ms ease;
 }
 
@@ -174,7 +201,7 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .btn {
@@ -376,17 +403,35 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .layout-lobby {
+    min-height: auto;
+  }
+
+  .layout-lobby .panel-main {
+    min-height: auto;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
   .app-shell {
     padding: 16px;
   }
 
   .panel-main {
     padding: 18px;
-    gap: 16px;
+    gap: 14px;
   }
 
   .card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .lobby-screen {
+    align-items: stretch;
+  }
+
+  .lobby-screen .card-grid {
+    width: 100%;
   }
 
   .room-banner {

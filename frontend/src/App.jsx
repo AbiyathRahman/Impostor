@@ -292,47 +292,49 @@ export default function App() {
         <div className="app-shell">
             <div className="bg-orb orb-a" />
             <div className="bg-orb orb-b" />
-            <main className="layout">
+            <main className={`layout ${!inRoom ? 'layout-lobby' : ''}`}>
                 <section className="panel panel-main">
                     <header className="hero">
                         <h1>Impostor Party</h1>
-                        <p className="subhead">A quick social deduction round powered by your Socket.IO backend.</p>
+                        <p className="subhead">Let's see if you can spot the impostor!</p>
                     </header>
 
                     {!inRoom ? (
-                        <div className="card-grid">
-                            <article className="card">
-                                <h2>Ready to play?</h2>
-                                <label>
-                                    Display Name
-                                    <input
-                                        type="text"
-                                        placeholder="Type your name"
-                                        value={displayName}
-                                        onChange={(e) => setDisplayName(e.target.value)}
-                                    />
-                                </label>
-                                <div className="button-row">
-                                    <button className="btn btn-primary" onClick={doCreateRoom}>Create Room</button>
-                                </div>
-                            </article>
+                        <div className="lobby-screen">
+                            <div className="card-grid">
+                                <article className="card">
+                                    <h2>Ready to play?</h2>
+                                    <label>
+                                        Display Name
+                                        <input
+                                            type="text"
+                                            placeholder="Type your name"
+                                            value={displayName}
+                                            onChange={(e) => setDisplayName(e.target.value)}
+                                        />
+                                    </label>
+                                    <div className="button-row">
+                                        <button className="btn btn-primary" onClick={doCreateRoom}>Create Room</button>
+                                    </div>
+                                </article>
 
-                            <article className="card">
-                                <h2>Join Existing Room</h2>
-                                <label>
-                                    Room Code
-                                    <input
-                                        type="text"
-                                        placeholder="1234"
-                                        value={joinCode}
-                                        onChange={(e) => setJoinCode(e.target.value)}
-                                        maxLength={6}
-                                    />
-                                </label>
-                                <div className="button-row">
-                                    <button className="btn" onClick={doJoinRoom}>Join Room</button>
-                                </div>
-                            </article>
+                                <article className="card">
+                                    <h2>Join Existing Room</h2>
+                                    <label>
+                                        Room Code
+                                        <input
+                                            type="text"
+                                            placeholder="1234"
+                                            value={joinCode}
+                                            onChange={(e) => setJoinCode(e.target.value)}
+                                            maxLength={6}
+                                        />
+                                    </label>
+                                    <div className="button-row">
+                                        <button className="btn" onClick={doJoinRoom}>Join Room</button>
+                                    </div>
+                                </article>
+                            </div>
                         </div>
                     ) : (
                         <>
