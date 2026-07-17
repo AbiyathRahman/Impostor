@@ -5,6 +5,7 @@ const {
     isHost,
     getPlayerCount,
     setGameData,
+    getGameData,
     submitAnswer,
     getAnswers,
     getPlayerNames,
@@ -105,6 +106,12 @@ module.exports = function gameHandler(io, socket) {
             }));
             io.to(roomCode).emit('answers-revealed', revealedAnswers);
             io.to(roomCode).emit('message', 'All answers are in. Host can now reveal the impostor.');
+            
+            // Broadcast the general question to everyone in the room after all answers are in
+            const gameData = getGameData(roomCode);
+            if (gameData && gameData.questionPair) {
+                io.to(roomCode).emit('general-question', gameData.questionPair.normal);
+            }
         }
     })
 
@@ -150,6 +157,59 @@ module.exports = function gameHandler(io, socket) {
         if (impostorId) {
             io.to(roomCode).emit('impostor-revealed', impostorId);
         }
+    })
+
+    socket.on('new-game', (roomCode) => {
+        console.log('New game requested for room:', roomCode, 'by socket:', socket.id);
+        
+        const exists = roomExists(roomCode);
+        console.log('Room exists:', exists);
+
+        if (!exists) {
+            socket.emit('message', 'Room not found');
+            return;
+        }
+
+        const isHostUser = isHost(roomCode, socket.id);
+        console.log('Is host:', isHostUser);
+        
+        if (!isHostUser) {
+            socket.emit('message', 'Only the host can start a new game');
+            return;
+        }
+
+        const players = getPlayers(roomCode);
+        const numPlayers = getPlayerCount(roomCode);
+        console.log('Players:', players, 'Count:', numPlayers);
+
+        if (numPlayers < 3) {
+            socket.emit('message', 'Not enough players to start a new game');
+            return;
+        }
+
+        io.to(roomCode).emit('message', 'Starting new game in room ' + roomCode);
+        
+        // Emit game-reset event to frontend to reset state BEFORE sending new questions
+        io.to(roomCode).emit('game-reset');
+        
+        const impostorId = assignImpostor(players);
+        const questionPair = assignQuestions();
+        setGameData(roomCode, {
+            started: true,
+            impostorId,
+            questionPair,
+        });
+        resetAnswers(roomCode);
+
+        console.log('New impostor:', impostorId);
+        console.log('New questions:', questionPair);
+
+        io.to(impostorId).emit('message', 'You are the impostor! Your question is: ' + questionPair.imposter);
+        players.forEach(playerId => {
+            if (playerId !== impostorId) {
+                io.to(playerId).emit('message', 'You are a normal player! Your question is: ' + questionPair.normal);
+            }
+        });
     })
 
     socket.on('disconnect', () => {

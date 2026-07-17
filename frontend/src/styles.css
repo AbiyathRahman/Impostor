@@ -90,6 +90,28 @@ body {
   flex-direction: column;
 }
 
+.panel-log-collapsible {
+  align-self: start;
+  gap: 14px;
+}
+
+.panel-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.panel-log-subtitle {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.panel-toggle {
+  padding-inline: 14px;
+}
+
 .hero h1 {
   margin: 10px 0 10px;
   font-family: 'Outfit', sans-serif;
@@ -264,6 +286,16 @@ textarea:focus {
   font-size: 1.15rem;
 }
 
+.role-label {
+  margin: 8px 0 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+}
+
+.role-label-impostor {
+  color: #ff5c5c;
+}
+
 .answer-form {
   margin-top: 16px;
   display: grid;
@@ -326,6 +358,51 @@ textarea:focus {
   margin: 0 0 8px;
   font-size: 0.92rem;
   color: var(--text-muted);
+}
+
+.activity-group {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.activity-group-title {
+  margin: 0 0 10px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-main);
+}
+
+.activity-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.activity-group li {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.activity-group li span {
+  display: block;
+  color: var(--accent-2);
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+}
+
+.activity-group li p {
+  margin: 0;
+  color: var(--text-main);
+}
+
+.activity-emphasis {
+  margin: 14px 0 0;
+  color: #ff8b8b;
+  font-family: 'Outfit', sans-serif;
 }
 
 @keyframes rise {

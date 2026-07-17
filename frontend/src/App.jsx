@@ -27,6 +27,7 @@ export default function App() {
 
     const [role, setRole] = useState('');
     const [question, setQuestion] = useState('');
+    const [generalQuestion, setGeneralQuestion] = useState('');
     const [answerText, setAnswerText] = useState('');
     const [answerSubmitted, setAnswerSubmitted] = useState(false);
 
@@ -34,10 +35,12 @@ export default function App() {
     const [playerNameById, setPlayerNameById] = useState({});
     const [impostorId, setImpostorId] = useState('');
     const [messages, setMessages] = useState([]);
+    const [showHostActivity, setShowHostActivity] = useState(false);
 
     const canStart = inRoom && isHost && playerCount >= 3 && !gameStarted;
     const canSubmitAnswer = inRoom && question && !answerSubmitted;
     const canRevealImpostor = inRoom && isHost && answers.length > 0 && !impostorId;
+    const canStartNewGame = inRoom && isHost && impostorId;
 
     const answerEntries = useMemo(() => {
         if (!answers.length) {
@@ -54,6 +57,22 @@ export default function App() {
 
         return playerNameById[impostorId] || 'Unknown player';
     }, [impostorId, playerNameById]);
+
+    const joinMessages = useMemo(() => {
+        return messages.filter((msg) => /has joined room/i.test(msg));
+    }, [messages]);
+
+    const resetRoundState = () => {
+        setGameStarted(false);
+        setRole('');
+        setQuestion('');
+        setGeneralQuestion('');
+        setAnswerText('');
+        setAnswerSubmitted(false);
+        setAnswers([]);
+        setPlayerNameById({});
+        setImpostorId('');
+    };
 
     useEffect(() => {
         const socket = io(SERVER_URL);
@@ -124,6 +143,16 @@ export default function App() {
             setMessages((prev) => [...prev, 'Impostor has been revealed']);
         });
 
+        socket.on('general-question', (question) => {
+            setGeneralQuestion(question);
+            setMessages((prev) => [...prev, `General question revealed: ${question}`]);
+        });
+
+        socket.on('game-reset', () => {
+            resetRoundState();
+            setMessages((prev) => [...prev, 'New game started']);
+        });
+
         return () => {
             socket.disconnect();
         };
@@ -157,14 +186,8 @@ export default function App() {
             setRoomCode(response.roomCode);
             setIsHost(Boolean(response.isHost));
             setPlayerCount(1);
-            setGameStarted(false);
-            setRole('');
-            setQuestion('');
-            setAnswerText('');
-            setAnswerSubmitted(false);
-            setAnswers([]);
-            setPlayerNameById({});
-            setImpostorId('');
+            setShowHostActivity(false);
+            resetRoundState();
             setMessages((prev) => [...prev, `Room ${response.roomCode} created`]);
         });
     };
@@ -192,14 +215,8 @@ export default function App() {
             setInRoom(true);
             setRoomCode(response.roomCode);
             setIsHost(Boolean(response.isHost));
-            setGameStarted(false);
-            setRole('');
-            setQuestion('');
-            setAnswerText('');
-            setAnswerSubmitted(false);
-            setAnswers([]);
-            setPlayerNameById({});
-            setImpostorId('');
+            setShowHostActivity(false);
+            resetRoundState();
             setMessages((prev) => [...prev, `Joined room ${response.roomCode}`]);
         });
     };
@@ -242,6 +259,18 @@ export default function App() {
         setMessages((prev) => [...prev, 'Reveal impostor requested']);
     };
 
+    const doNewGame = () => {
+        const socket = socketRef.current;
+        if (!socket || !roomCode) {
+            console.log('Cannot start new game - socket:', !!socket, 'roomCode:', roomCode);
+            return;
+        }
+
+        console.log('Emitting new-game event for room:', roomCode);
+        socket.emit('new-game', roomCode);
+        setMessages((prev) => [...prev, 'New game requested']);
+    };
+
     const doLeaveRoom = () => {
         const socket = socketRef.current;
         if (!socket || !roomCode) {
@@ -253,14 +282,8 @@ export default function App() {
             setRoomCode('');
             setIsHost(false);
             setPlayerCount(1);
-            setGameStarted(false);
-            setRole('');
-            setQuestion('');
-            setAnswerText('');
-            setAnswerSubmitted(false);
-            setAnswers([]);
-            setPlayerNameById({});
-            setImpostorId('');
+            setShowHostActivity(false);
+            resetRoundState();
             setMessages((prev) => [...prev, 'You left the room']);
         });
     };
@@ -327,14 +350,14 @@ export default function App() {
                                 </div>
                             </article>
 
-                            {!gameStarted ? (
+                            {!gameStarted && (
                                 <article className="card flow-card">
-                                    <h2>Game Flow</h2>
+                                    <h2>Ready for a round?</h2>
                                     <ol>
-                                        <li>Gather at least 3 players.</li>
-                                        <li>Host starts the game.</li>
-                                        <li>Everyone submits one answer.</li>
-                                        <li>Answers reveal to all, then host reveals impostor.</li>
+                                        <li>Host starts a round.</li>
+                                        <li>Everyone gets a role and a private question.</li>
+                                        <li>Players submit one answer.</li>
+                                        <li>Once all answers are in, the host reveals the impostor.</li>
                                     </ol>
 
                                     <div className="button-row">
@@ -344,40 +367,42 @@ export default function App() {
                                         <button className="btn" onClick={doLeaveRoom}>Leave Room</button>
                                     </div>
                                 </article>
-                            ) : (
-                                <article className="card stage-card">
-                                    <div className="stage-head">
-                                        <p className="meta-label">Main Stage</p>
-                                        <button className="btn" onClick={doLeaveRoom}>Leave Room</button>
-                                    </div>
-                                    <h2>Game in Progress</h2>
-                                    <p className="stage-note">Use the card below to view your role, question, and submit your answer.</p>
+                            )}
+
+                            {gameStarted && (
+                                <article className="card question-card">
+                                    <p className="meta-label">Your Role</p>
+                                    <h3 className={role === 'Impostor' ? 'role-label role-label-impostor' : 'role-label'}>
+                                        {role || 'Player'}
+                                    </h3>
+
+                                    {question ? (
+                                        <>
+                                            <p className="question-text">{question}</p>
+
+                                            <form className="answer-form" onSubmit={doSubmitAnswer}>
+                                                <textarea
+                                                    value={answerText}
+                                                    onChange={(e) => setAnswerText(e.target.value)}
+                                                    placeholder="Enter your answer"
+                                                    rows={3}
+                                                    disabled={!canSubmitAnswer}
+                                                />
+                                                <button className="btn btn-primary" type="submit" disabled={!canSubmitAnswer}>
+                                                    {answerSubmitted ? 'Submitted' : 'Submit Answer'}
+                                                </button>
+                                            </form>
+                                        </>
+                                    ) : (
+                                        <p className="stage-note">Waiting for the host to assign your role and question.</p>
+                                    )}
                                 </article>
                             )}
 
-                            {question ? (
-                                <article className="card question-card">
-                                    <p className="meta-label">Your Role</p>
-                                    <h3>{role || 'Player'}</h3>
-                                    <p className="question-text">{question}</p>
-
-                                    <form className="answer-form" onSubmit={doSubmitAnswer}>
-                                        <textarea
-                                            value={answerText}
-                                            onChange={(e) => setAnswerText(e.target.value)}
-                                            placeholder="Enter your answer"
-                                            rows={3}
-                                            disabled={!canSubmitAnswer}
-                                        />
-                                        <button className="btn btn-primary" type="submit" disabled={!canSubmitAnswer}>
-                                            {answerSubmitted ? 'Submitted' : 'Submit Answer'}
-                                        </button>
-                                    </form>
-                                </article>
-                            ) : (
-                                <article className="card waiting-card">
-                                    <h3>Waiting for game start</h3>
-                                    <p>Once the host starts, your role and question will appear here.</p>
+                            {generalQuestion && (
+                                <article className="card general-question-card">
+                                    <p className="meta-label">General Question</p>
+                                    <p className="question-text">{generalQuestion}</p>
                                 </article>
                             )}
 
@@ -400,25 +425,70 @@ export default function App() {
                                 </article>
                             )}
 
+
+
                             {impostorId && (
                                 <article className="card impostor-card">
                                     <h3>Impostor Revealed</h3>
                                     <p>{revealedImpostorName}</p>
+                                    {canStartNewGame && (
+                                        <button className="btn btn-primary" onClick={doNewGame}>
+                                            Start New Game
+                                        </button>
+                                    )}
                                 </article>
                             )}
                         </>
                     )}
                 </section>
 
-                <aside className="panel panel-log">
-                    <h2>Live Feed</h2>
-                    <div className="message-list">
-                        {messages.length === 0 ? <p>No events yet.</p> : null}
-                        {messages.map((msg, idx) => (
-                            <p key={`${msg}-${idx}`}>{msg}</p>
-                        ))}
-                    </div>
-                </aside>
+                {inRoom && isHost && (
+                    <aside className="panel panel-log panel-log-collapsible">
+                        <div className="panel-log-header">
+                            <div>
+                                <h2>Host Activity</h2>
+                                <p className="panel-log-subtitle">Joins, answers, and impostor reveal.</p>
+                            </div>
+                            <button
+                                className="btn panel-toggle"
+                                onClick={() => setShowHostActivity((prev) => !prev)}
+                                aria-expanded={showHostActivity}
+                            >
+                                {showHostActivity ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
+
+                        {showHostActivity && (
+                            <div className="message-list">
+                                {joinMessages.length === 0 && answers.length === 0 && !impostorId ? (
+                                    <p>No host updates yet.</p>
+                                ) : null}
+
+                                {joinMessages.map((msg, idx) => (
+                                    <p key={`${msg}-${idx}`}>{msg}</p>
+                                ))}
+
+                                {answers.length > 0 && (
+                                    <div className="activity-group">
+                                        <p className="activity-group-title">Answers submitted</p>
+                                        <ul>
+                                            {answerEntries.map((entry) => (
+                                                <li key={entry.playerId}>
+                                                    <span>{entry.playerName}</span>
+                                                    <p>{entry.answer}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {impostorId && (
+                                    <p className="activity-emphasis">Impostor revealed: {revealedImpostorName}</p>
+                                )}
+                            </div>
+                        )}
+                    </aside>
+                )}
             </main>
         </div>
     );
