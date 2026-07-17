@@ -295,9 +295,6 @@ export default function App() {
             <main className="layout">
                 <section className="panel panel-main">
                     <header className="hero">
-                        <p className="status-dot" data-online={connected}>
-                            {connected ? 'Server online' : 'Server offline'}
-                        </p>
                         <h1>Impostor Party</h1>
                         <p className="subhead">A quick social deduction round powered by your Socket.IO backend.</p>
                     </header>
@@ -343,10 +340,9 @@ export default function App() {
                                 <div>
                                     <p className="meta-label">Room</p>
                                     <h2>{roomCode}</h2>
-                                </div>
-                                <div className="room-tags">
-                                    <span className="tag">{playerCount} players</span>
-                                    <span className="tag">{isHost ? 'Host' : 'Guest'}</span>
+                                    <p className="room-meta">
+                                        {playerCount} players · {isHost ? 'Host' : 'Guest'}
+                                    </p>
                                 </div>
                             </article>
 
